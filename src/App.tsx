@@ -17,13 +17,10 @@ const DEFAULT_FILTERS: Filters = {
 
 function applyFilters(tasks: Task[], filters: Filters): Task[] {
   let list = [...tasks]
-
   if (filters.status === 'active') list = list.filter(t => !t.done)
   else if (filters.status === 'done') list = list.filter(t => t.done)
-
   if (filters.priority !== 'all') list = list.filter(t => t.priority === filters.priority)
   if (filters.category !== 'all') list = list.filter(t => t.category === filters.category)
-
   if (filters.sort === 'due') {
     list.sort((a, b) => {
       if (!a.dueDate) return 1
@@ -35,20 +32,33 @@ function applyFilters(tasks: Task[], filters: Filters): Task[] {
   } else {
     list.sort((a, b) => b.createdAt - a.createdAt)
   }
-
   return list
 }
 
 export default function App() {
-  const { tasks, addTask, toggleDone, deleteTask } = useTasks()
+  const { tasks, loading, error, addTask, toggleDone, deleteTask } = useTasks()
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
 
   const visible = useMemo(() => applyFilters(tasks, filters), [tasks, filters])
   const doneCount = tasks.filter(t => t.done).length
 
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="spinner" />
+        <p>加载中…</p>
+      </div>
+    )
+  }
+
   return (
     <div className="container">
       <Header total={tasks.length} done={doneCount} />
+
+      {error && (
+        <div className="error-banner">⚠️ {error}</div>
+      )}
+
       <AddTaskForm onAdd={addTask} />
       <FilterBar filters={filters} onChange={setFilters} />
 
